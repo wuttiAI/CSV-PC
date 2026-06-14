@@ -7,7 +7,7 @@ import contextlib
 # ตั้งค่าหน้าเว็บ
 st.set_page_config(page_title="Python & CSV Sandbox for Students", layout="wide")
 
-st.title("🖥️ UPR ห้องปฏิบัติการฝึกเขียน Python ประมวลผล CSV")
+st.title("🖥️ ห้องปฏิบัติการฝึกเขียน Python ประมวลผล CSV . UPR")
 st.write("คำชี้แจง: อัปโหลดไฟล์ CSV ของคุณ จากนั้นเขียนโค้ด Python โดยใช้ตัวแปร `df` เพื่อจัดการข้อมูล")
 
 # แยกหน้าจอเป็น 2 ฝั่ง (ซ้าย: ข้อมูลและโจทย์ / ขวา: พื้นที่เขียนโค้ด)
