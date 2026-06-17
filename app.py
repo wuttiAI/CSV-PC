@@ -1,44 +1,44 @@
 import streamlit as st
 import pandas as pd
 import traceback
+import os
 
-st.set_page_config(page_title="Python Sandbox", layout="wide")
+st.set_page_config(page_title="Python CSV Sandbox", layout="wide")
 
-st.title("🖥️ ห้องปฏิบัติการฝึกเขียน Python (เวอร์ชันเสถียร)")
-st.write("คำชี้แจง: อัปโหลดไฟล์ CSV 1 หรือ 2 ไฟล์ ระบบจะสร้างตัวแปร `df1` และ `df2` ให้นักเรียนนำไปเขียนโค้ดต่อ")
-
-# กำหนดตัวแปรตั้งต้นให้เป็น None
-df1 = None
-df2 = None
+st.title("🖥️ ห้องปฏิบัติการฝึกเขียน Python (รันด้วยชื่อไฟล์จริง)")
+st.write("คำชี้แจง: อัปโหลดไฟล์ CSV เข้าสู่ระบบ จากนั้นเขียนโค้ดเรียกใช้ไฟล์โดยพิมพ์ชื่อไฟล์ที่คุณอัปโหลดได้เลย")
 
 # 1. ส่วนอัปโหลดไฟล์ (รับได้สูงสุด 2 ไฟล์)
 uploaded_files = st.file_uploader("เลือกไฟล์ CSV ของคุณ (สูงสุด 2 ไฟล์)", type=["csv"], accept_multiple_files=True)
 
 if uploaded_files:
-    for index, file in enumerate(uploaded_files[:2]):
+    for file in uploaded_files[:2]:
         try:
-            if index == 0:
-                df1 = pd.read_csv(file)
-                st.success(f"ไฟล์ที่ 1 ({file.name}) โหลดเข้าตัวแปร `df1` เรียบร้อยแล้ว")
-                st.dataframe(df1.head(3)) # แสดงตัวอย่างข้อมูล 3 แถวแรก
-            elif index == 1:
-                df2 = pd.read_csv(file)
-                st.success(f"ไฟล์ที่ 2 ({file.name}) โหลดเข้าตัวแปร `df2` เรียบร้อยแล้ว")
-                st.dataframe(df2.head(3)) # แสดงตัวอย่างข้อมูล 3 แถวแรก
+            # 💡 จุดสำคัญ: แอบเซฟไฟล์ที่เด็กอัปโหลดลงเครื่องเซิร์ฟเวอร์จริงๆ ตามชื่อไฟล์นั้น
+            with open(file.name, "wb") as f:
+                f.write(file.getbuffer())
+                
+            st.success(f"💾 อัปโหลดไฟล์ `{file.name}` เข้าสู่ระบบสำเร็จ! (นักเรียนสามารถใช้ชื่อไฟล์นี้ในโค้ดได้เลย)")
+            
+            # แสดงตัวอย่างข้อมูลให้ดูเพื่อความแน่ใจ
+            temp_df = pd.read_csv(file.name)
+            st.dataframe(temp_df.head(3))
+            
         except Exception as e:
-            st.error(f"ไม่สามารถอ่านไฟล์ {file.name} ได้: {e}")
+            st.error(f"ไม่สามารถประมวลผลไฟล์ {file.name} ได้: {e}")
 
 st.write("---")
 
-# 2. พื้นที่เขียนโค้ด Python (กลับมาใช้กล่องมาตรฐานของ Streamlit ที่เสถียรที่สุด)
+# 2. พื้นที่เขียนโค้ด Python
 st.subheader("📝 พื้นที่เขียนโค้ด Python")
 
-default_code = """# ตัวอย่างการใช้งานตัวแปร df1 และ df2
-if df1 is not None:
-    print("โครงสร้างของ df1 คือ:", df1.shape)
-    
-if df2 is not None:
-    print("โครงสร้างของ df2 คือ:", df2.shape)
+# เปลี่ยนโค้ดไกด์ไลน์เริ่มต้นให้ตรงกับสไตล์ที่คุณครูอยากให้เด็กเขียน
+default_code = """import pandas as pd
+
+# สมมติว่าอัปโหลดไฟล์ชื่อ studentData.csv เข้ามา
+# นักเรียนสามารถใช้คำสั่ง pd.read_csv พิมพ์ชื่อไฟล์ตรงๆ ได้เลยแบบนี้ครับ:
+stdData = pd.read_csv('studentData.csv', delimiter=',')
+print(stdData)
 """
 
 user_code = st.text_area("เขียนโค้ดของคุณที่นี่:", value=default_code, height=250)
@@ -54,10 +54,10 @@ if st.button("▶️ รันโค้ด (Run Code)"):
     redirected_output = sys.stdout = StringIO()
     
     try:
-        # ส่งเฉพาะ pandas, df1, df2 เข้าไปในขอบเขตการรันโค้ด
-        local_scope = {"df1": df1, "df2": df2, "pd": pd}
+        # ส่ง pandas เข้าไปให้เรียกใช้ได้
+        local_scope = {"pd": pd}
         
-        # รันโค้ด Python
+        # รันโค้ด Python ของนักเรียน
         exec(user_code, globals(), local_scope)
         
         sys.stdout = old_stdout
