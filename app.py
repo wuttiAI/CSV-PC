@@ -61,4 +61,18 @@ if st.button("▶️ รันโค้ด (Run Code)"):
         local_scope = {"pd": pd}
         
         # รันโค้ด Python
-        exec(user_code
+        exec(user_code, globals(), local_scope)
+        
+        sys.stdout = old_stdout
+        
+        # ดึงค่าที่นักเรียนสั่ง print ออกมาแสดงผล
+        output = redirected_output.getvalue()
+        if output:
+            st.code(output, language="python")
+        else:
+            st.info("โค้ดทำงานสำเร็จ (แต่ไม่มีการใช้คำสั่ง print เพื่อแสดงผลลัพธ์)")
+            
+    except Exception as e:
+        sys.stdout = old_stdout
+        error_msg = traceback.format_exc()
+        st.error(f"❌ โค้ดของนักเรียนมีจุดผิดพลาด:\n{error_msg}")
