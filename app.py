@@ -3,50 +3,58 @@ import pandas as pd
 import traceback
 import os
 
-st.set_page_config(page_title="Python CSV Sandbox (3 Files)", layout="wide")
+st.set_page_config(page_title="Python CSV Sandbox", layout="wide")
 
-st.title("🖥️ ห้องปฏิบัติการฝึกเขียน Python (รองรับสูงสุด 3 ไฟล์)")
-st.write("คำชี้แจง: อัปโหลดไฟล์ CSV ได้สูงสุด 3 ไฟล์ จากนั้นเขียนโค้ดเรียกใช้ไฟล์โดยพิมพ์ชื่อไฟล์ให้ตรงกับที่คุณอัปโหลด")
+st.title("🖥️ ห้องปฏิบัติการฝึกเขียน Python (พร้อมไฟล์บทเรียน)")
+st.write("คำชี้แจง: ระบบได้เตรียมไฟล์ข้อมูลสำหรับฝึกหัดไว้ให้เรียบร้อยแล้ว นักเรียนสามารถเขียนโค้ดเรียกใช้ไฟล์ตามชื่อด้านล่างได้ทันที")
 
-# 1. ส่วนอัปโหลดไฟล์ (ปรับเปลี่ยนตรงคลิปหนีบไฟล์ให้รับสูงสุด 3 ไฟล์)
-uploaded_files = st.file_uploader("เลือกไฟล์ CSV ของคุณ (สูงสุด 3 ไฟล์)", type=["csv"], accept_multiple_files=True)
+# --- 🟢 ส่วนที่ 1: รายชื่อไฟล์จริงที่คุณครูกำหนด ---
+preset_files = ["sciScore.csv", "studentData.csv", "studentData-noHeader.csv"]
 
-if uploaded_files:
-    # จำกัดการทำงานไว้ที่ไม่เกิน 3 ไฟล์แรกที่อัปโหลดเข้ามา
-    for file in uploaded_files[:3]:
-        try:
-            # บันทึกไฟล์ลงเซิร์ฟเวอร์ตามชื่อไฟล์จริง
-            with open(file.name, "wb") as f:
-                f.write(file.getbuffer())
-                
-            st.success(f"💾 อัปโหลดไฟล์ `{file.name}` สำเร็จ! (นำชื่อนี้ไปใส่ในโค้ดได้เลย)")
-            
-            # แสดงตารางตัวอย่างข้อมูล 3 แถวแรกให้นักเรียนเช็กคอลลัมน์
-            temp_df = pd.read_csv(file.name)
-            st.dataframe(temp_df.head(3))
-            
-        except Exception as e:
-            st.error(f"ไม่สามารถประมวลผลไฟล์ {file.name} ได้: {e}")
+st.subheader("📊 ไฟล์ข้อมูลที่มีอยู่ในระบบ (พร้อมใช้เรียน)")
+cols = st.columns(len(preset_files))
+
+for index, file_name in enumerate(preset_files):
+    with cols[index]:
+        # ตรวจสอบว่าคุณครูอัปโหลดไฟล์นี้ขึ้น GitHub หรือยัง
+        if os.path.exists(file_name):
+            st.info(f"📄 ไฟล์: `{file_name}`")
+            try:
+                # ถ้าเป็นไฟล์แบบไม่มี Header ให้ลองจำลองเปิดแบบไม่มีหัวคอลัมน์เพื่อความสวยงามบนหน้าเว็บ
+                if "noHeader" in file_name:
+                    temp_df = pd.read_csv(file_name, header=None)
+                else:
+                    temp_df = pd.read_csv(file_name)
+                st.dataframe(temp_df.head(3))
+            except Exception as e:
+                st.error(f"อ่านไฟล์ล้มเหลว: {e}")
+        else:
+            st.warning(f"⚠️ ไม่พบไฟล์ `{file_name}`\n(กรุณาอัปโหลดไฟล์นี้ขึ้นหน้าแรกของ GitHub)")
 
 st.write("---")
 
-# 2. พื้นที่เขียนโค้ด Python
+# --- 📝 ส่วนที่ 2: พื้นที่เขียนโค้ด Python ---
 st.subheader("📝 พื้นที่เขียนโค้ด Python")
 
-# ปรับตัวอย่างโค้ดไกด์ไลน์ให้นักเรียนเห็นภาพการดึงข้อมูล 3 ไฟล์มาใช้งานพร้อมกัน
+# ไกด์ไลน์คำสั่งสอนนักเรียนเกี่ยวกับความแตกต่างของไฟล์แต่ละประเภท
 default_code = """import pandas as pd
 
-# ตัวอย่าง: หากนักเรียนอัปโหลดไฟล์มา 3 ไฟล์ สามารถเขียนอ่านไฟล์ตรงๆ ได้แบบนี้เลยครับ
-# df1 = pd.read_csv('student_info.csv')
-# df2 = pd.read_csv('student_score.csv')
-# df3 = pd.read_csv('student_attendance.csv')
+# 💡 ตัวอย่างที่ 1: อ่านไฟล์ธรรมดาที่มีหัวคอลัมน์
+df_std = pd.read_csv('studentData.csv')
+print("--- ข้อมูลใน studentData.csv ---")
+print(df_std.head(2))
 
-# ทดลองพิมพ์โค้ดของคุณด้านล่างนี้ได้เลย:
+# 💡 ตัวอย่างที่ 2: อ่านไฟล์ที่ไม่มีหัวคอลัมน์ (ต้องระบุ header=None และตั้งชื่อคอลัมน์เอง)
+# df_no_header = pd.read_csv('studentData-noHeader.csv', header=None, names=['id', 'name', 'age'])
+# print("\\n--- ข้อมูลใน studentData-noHeader.csv ---")
+# print(df_no_header.head(2))
+
+# 💡 ลองเขียนโค้ดวิเคราะห์ข้อมูลของคุณต่อตรงนี้ได้เลยครับ:
 """
 
-user_code = st.text_area("เขียนโค้ดของคุณที่นี่:", value=default_code, height=280)
+user_code = st.text_area("เขียนโค้ดของคุณที่นี่:", value=default_code, height=320)
 
-# 3. ส่วนประมวลผลและแสดงผลลัพธ์เมื่อกดปุ่ม
+# --- 📊 ส่วนที่ 3: ประมวลผลเมื่อกดปุ่ม ---
 if st.button("▶️ รันโค้ด (Run Code)"):
     st.subheader("📊 ผลลัพธ์ (Output)")
     
@@ -57,15 +65,15 @@ if st.button("▶️ รันโค้ด (Run Code)"):
     redirected_output = sys.stdout = StringIO()
     
     try:
-        # ส่ง Library Pandas เข้าไปในระบบรันโค้ดของนักเรียน
+        # ส่งพารามิเตอร์ pandas เข้าไปให้นักเรียนเรียกใช้
         local_scope = {"pd": pd}
         
-        # รันโค้ด Python
+        # รันโค้ด
         exec(user_code, globals(), local_scope)
         
         sys.stdout = old_stdout
         
-        # ดึงค่าที่นักเรียนสั่ง print ออกมาแสดงผล
+        # ดึงข้อความจากการสั่ง print ออกมาแสดง
         output = redirected_output.getvalue()
         if output:
             st.code(output, language="python")
