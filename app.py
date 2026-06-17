@@ -1,12 +1,22 @@
 import streamlit as st
 import pandas as pd
 import traceback
-from streamlit_ace import st_ace  # 🔥 นำเข้ากล่องเขียนโค้ดแบบมีเลขบรรทัด
+from streamlit_ace import st_ace
 
 st.set_page_config(page_title="Python Sandbox with Line Numbers", layout="wide")
 
 st.title("🖥️ ห้องปฏิบัติการฝึกเขียน Python (มีเลขบรรทัด)")
 st.write("คำชี้แจง: อัปโหลดไฟล์ CSV 1 หรือ 2 ไฟล์ ระบบจะสร้างตัวแปร `df1` และ `df2` ให้นักเรียนนำไปเขียนโค้ดต่อ")
+
+# 💡 แก้ปัญหา TypeError: เช็กและสร้างสถานะเริ่มต้นเพื่อไม่ให้ระบบเออร์เรอร์เวลาหน้าเว็บรีเฟรช
+if "editor_code" not in st.session_state:
+    st.session_state["editor_code"] = """# ตัวอย่างการใช้งานตัวแปร df1 และ df2
+if df1 is not None:
+    print("โครงสร้างของ df1 คือ:", df1.shape)
+    
+if df2 is not None:
+    print("โครงสร้างของ df2 คือ:", df2.shape)
+"""
 
 df1 = None
 df2 = None
@@ -30,29 +40,24 @@ if uploaded_files:
 
 st.write("---")
 
-# 2. พื้นที่เขียนโค้ด Python (เปลี่ยนเป็นแบบมีเลขบรรทัด)
+# 2. พื้นที่เขียนโค้ด Python
 st.subheader("📝 พื้นที่เขียนโค้ด Python")
 
-default_code = """# ตัวอย่างการใช้งานตัวแปร df1 และ df2
-if df1 is not None:
-    print("โครงสร้างของ df1 คือ:", df1.shape)
-    
-if df2 is not None:
-    print("โครงสร้างของ df2 คือ:", df2.shape)
-"""
-
-# 🔥 เรียกใช้งาน st_ace แทน st.text_area เพื่อเปิดใช้งานเลขบรรทัดและธีมสีโค้ด
+# 🔥 เรียกใช้งาน st_ace โดยดึงค่าจาก session_state ป้องกันอาการ TypeError ทันที
 user_code = st_ace(
-    value=default_code,
-    language="python",        # เปิดไฮไลต์สีตามหลักภาษา Python
-    theme="monokai",          # สีธีมมืดแบบที่โปรแกรมเมอร์นิยม (เปลี่ยนเป็น "github" ถ้าชอบสีสว่าง)
-    font_size=16,             # ขนาดตัวอักษรให้อ่านง่าย
-    tab_size=4,               # เคาะ Tab เว้นวรรคทีละ 4 ช่องตามมาตรฐาน Python
-    wrap=True,                # ตัดคำอัตโนมัติเมื่อขึ้นบรรทัดใหม่
-    auto_validate=False,      # ไม่รันโค้ดอัตโนมัติจนกว่าจะกดปุ่ม
+    value=st.session_state["editor_code"],
+    language="python",
+    theme="monokai",
+    font_size=16,
+    tab_size=4,
+    wrap=True,
+    auto_validate=False,
     height=300,
-    key="python_editor"
+    key="python_editor_ace"
 )
+
+# อัปเดตโค้ดล่าสุดเก็บลงระบบความจำของเพจ
+st.session_state["editor_code"] = user_code
 
 # 3. ส่วนประมวลผลและแสดงผลลัพธ์
 if st.button("▶️ รันโค้ด (Run Code)"):
