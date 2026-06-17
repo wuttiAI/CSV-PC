@@ -5,7 +5,7 @@ import contextlib
 
 st.set_page_config(page_title="Python CSV Parser Sandbox", layout="wide")
 
-st.title("🖥️ ฝึกหัดเขียนโปรแกรมภาษา Python : UPR LAB COM")
+st.title("🖥️ ฝึกหัดเขียนโปรแกรมภาษา Python UPR LAB COM")
 st.write("คำชี้แจง: อัปโหลดไฟล์ CSV ระบบจะเก็บเนื้อหาของไฟล์ในรูปแบบข้อความดิบ (String) ไว้ในตัวแปรดิคชันนารีชื่อ `raw_files`")
 
 col1, col2 = st.columns([1, 1])
