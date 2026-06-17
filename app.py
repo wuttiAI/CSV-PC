@@ -1,112 +1,81 @@
 import streamlit as st
-import sys
-from io import StringIO
-import contextlib
+import pandas as pd
+import traceback
 
-# 1. ตั้งค่าหน้าเว็บให้เป็นแบบกว้าง (Wide Layout)
-st.set_page_config(page_title="Python CSV Parser Sandbox", layout="wide")
+st.set_page_config(page_title="Python Sandbox", layout="wide")
 
-st.title("🖥️ ห้องปฏิบัติการเขียนฟังก์ชัน Read CSV ด้วยตัวเอง")
-st.write("คำชี้แจง: อัปโหลดไฟล์ CSV ระบบจะเก็บเนื้อหาของไฟล์ในรูปแบบข้อความดิบ (String) ไว้ในตัวแปรดิคชันนารีชื่อ `raw_files`")
+st.title("🖥️ ห้องปฏิบัติการฝึกเขียน Python (อัปโหลดได้ 2 ไฟล์)")
+st.write("คำชี้แจง: อัปโหลดไฟล์ CSV 1 หรือ 2 ไฟล์ ระบบจะสร้างตัวแปร `df1` และ `df2` ให้นักเรียนนำไปเขียนโค้ดต่อ")
 
-# 2. แยกหน้าจอเป็น 2 ฝั่ง (ซ้าย: อัปโหลดและดูไฟล์ / ขวา: เขียนโค้ดและดูผลลัพธ์)
-col1, col2 = st.columns([1, 1])
+# สร้างตัวแปรเริ่มต้นสำหรับเก็บข้อมูลตาราง
+df1 = None
+df2 = None
 
-with col1:
-    st.header("1. อัปโหลดและดูไฟล์ข้อความดิบ")
-    uploaded_files = st.file_uploader("เลือกไฟล์ CSV (ส่งได้หลายไฟล์พร้อมกัน)", type=["csv"], accept_multiple_files=True)
+# 1. ส่วนอัปโหลดไฟล์ (จำกัดให้เลือกได้สูงสุด 2 ไฟล์)
+uploaded_files = st.file_uploader("เลือกไฟล์ CSV ของคุณ (สูงสุด 2 ไฟล์)", type=["csv"], accept_multiple_files=True)
+
+if uploaded_files:
+    # วนลูปอ่านไฟล์ที่อัปโหลดเข้ามาทีละไฟล์ (ไม่เกิน 2 ไฟล์)
+    for index, file in enumerate(uploaded_files[:2]):
+        try:
+            if index == 0:
+                df1 = pd.read_csv(file)
+                st.success(f"ไฟล์ที่ 1 ({file.name}) โหลดเข้าตัวแปร `df1` เรียบร้อยแล้ว")
+                st.dataframe(df1.head(3)) # แสดงตัวอย่าง 3 แถวแรก
+            elif index == 1:
+                df2 = pd.read_csv(file)
+                st.success(f"ไฟล์ที่ 2 ({file.name}) โหลดเข้าตัวแปร `df2` เรียบร้อยแล้ว")
+                st.dataframe(df2.head(3)) # แสดงตัวอย่าง 3 แถวแรก
+        except Exception as e:
+            st.error(f"ไม่สามารถอ่านไฟล์ {file.name} ได้: {e}")
+
+st.write("---")
+
+# 2. พื้นที่เขียนโค้ด Python
+st.subheader("📝 พื้นที่เขียนโค้ด Python")
+
+# โค้ดตัวอย่างที่แสดงให้นักเรียนดูเป็นแนวทาง
+default_code = """# ตัวอย่างการใช้งานตัวแปร df1 และ df2
+if df1 is not None:
+    print("โครงสร้างของ df1 คือ:", df1.shape)
     
-    # ตัวแปรสำหรับเก็บข้อความดิบของไฟล์: {"ชื่อไฟล์.csv": "ข้อความดิบข้างในทั้งหมด"}
-    raw_files = {} 
-    
-    if uploaded_files:
-        st.success(f"โหลดไฟล์เข้าสู่ระบบจำนวน {len(uploaded_files)} ไฟล์สำเร็จ!")
-        
-        for uploaded_file in uploaded_files:
-            try:
-                # อ่านไฟล์ออกมาเป็น String ดิบๆ โดยตรง
-                stringio = StringIO(uploaded_file.getvalue().decode("utf-8"))
-                file_contents = stringio.read()
-                
-                # เก็บลงใน Dictionary โดยใช้ชื่อไฟล์เป็น Key
-                raw_files[uploaded_file.name] = file_contents
-                
-                # สร้างกล่องพับเพื่อแสดงหน้าตาของข้อมูลดิบข้างในให้นักเรียนเห็น
-                with st.expander(f"📄 เนื้อหาดิบในไฟล์ (Raw Text): {uploaded_file.name}"):
-                    st.text(file_contents[:500] + "\n... (มีต่อ) ...") 
-                    
-            except Exception as e:
-                st.error(f"เกิดข้อผิดพลาดในการอ่านไฟล์ {uploaded_file.name}: {e}")
-    else:
-        st.info("💡 กรุณาอัปโหลดไฟล์ CSV ก่อน ระบบจะสร้างตัวแปรชื่อ `raw_files` ให้ใช้งาน")
-
-with col2:
-    st.header("2. พื้นที่เขียนโค้ด Python")
-    
-    # โจทย์ไกด์ไลน์เริ่มต้นที่แสดงในช่องคำสั่งให้นักเรียน
-    default_code = """# โจทย์: เขียนฟังก์ชันเพื่อแปลงข้อความดิบ (CSV String) ให้กลายเป็น List ของ Dictionary
-def my_read_csv(csv_string):
-    lines = csv_string.strip().split('\\n') # แยกแต่ละบรรทัด
-    headers = lines[0].split(',')          # บรรทัดแรกคือหัวคอลัมน์
-    
-    result = []
-    for line in lines[1:]:                 # ลูปตั้งแต่บรรทัดที่สองลงไป
-        values = line.split(',')
-        # สร้าง dict จับคู่หัวคอลัมน์กับข้อมูล
-        row_dict = dict(zip(headers, values)) 
-        result.append(row_dict)
-        
-    return result
-
-# --- ทดสอบเรียกใช้งานฟังก์ชันของนักเรียน ---
-file_name = list(raw_files.keys())[0] # ดึงชื่อไฟล์แรกมาทดสอบ
-data_string = raw_files[file_name]     # ดึงข้อความดิบออกมา
-
-# รันฟังก์ชัน
-parsed_data = my_read_csv(data_string)
-
-print(f"ผลลัพธ์จากการอ่านไฟล์ {file_name}:")
-print("ข้อมูล 2 แถวแรกที่แปลงเสร็จแล้ว:")
-print(parsed_data[:2])
+if df2 is not None:
+    print("โครงสร้างของ df2 คือ:", df2.shape)
 """
-    
-    # ช่องกรอกโค้ดสำหรับนักเรียน
-    user_code = st.text_area(
-        "เขียนฟังก์ชันและโค้ดของคุณที่นี่ (ใช้ตัวแปร raw_files):", 
-        value=default_code, 
-        height=380
-    )
-    
-    run_button = st.button("▶️ รันโค้ด (Run Code)")
-    
-    st.header("3. ผลลัพธ์การประมวลผล (Output)")
-    
-    if run_button:
-        if not raw_files:
-            st.warning("⚠️ กรุณาอัปโหลดไฟล์ CSV ก่อนรันโค้ด")
-        else:
-            # 💡 ฟังก์ชันดักจับคำสั่ง print (แก้ไขส่วนที่เคยบั๊กเรียบร้อยแล้ว)
-            @contextlib.contextmanager
-            def stdout_io(stdout=None):
-                if stdout is None:
-                    stdout = StringIO()
-                oldout = sys.stdout
-                sys.stdout = stdout
-                try:
-                    yield stdout
-                finally:
-                    sys.stdout = oldout
 
-            # ทำการรันโค้ดของนักเรียนในสภาพแวดล้อมจำลอง
-            with stdout_io() as s:
-                try:
-                    # ส่งตัวแปร raw_files เข้าไปในสภาพแวดล้อมให้เด็กเรียกใช้ได้
-                    local_env = {"raw_files": raw_files}
-                    exec(user_code, globals(), local_env)
-                    
-                    # แสดงผลลัพธ์ที่ได้จากการสั่ง print
-                    result = s.getvalue()
-                    if result:
-                        st.code(result, language="python")
-                    else:
-                        st.info("โค้ดทำงานสำเร็จ แต่ไม่มีการสั่ง print ผลลัพธ์ออกมา")
+user_code = st.text_area("เขียนโค้ดของคุณที่นี่:", value=default_code, height=250)
+
+# 3. ส่วนประมวลผลและแสดงผลลัพธ์
+if st.button("▶️ รันโค้ด (Run Code)"):
+    st.subheader("📊 ผลลัพธ์ (Output)")
+    
+    # ดักจับคำสั่ง print แบบวิธีมาตรฐานของ Python (ปลอดภัยและไม่บั๊กง่าย)
+    import sys
+    from io import StringIO
+    
+    old_stdout = sys.stdout
+    redirected_output = sys.stdout = StringIO()
+    
+    try:
+        # เตรียมตัวแปรแวดล้อมส่งให้นักเรียนใช้งาน
+        local_scope = {"df1": df1, "df2": df2, "pd": pd}
+        
+        # สั่งรันโค้ดของนักเรียน
+        exec(user_code, globals(), local_scope)
+        
+        # คืนค่าตัวระบบแสดงผลกลับมาที่เดิม
+        sys.stdout = old_stdout
+        
+        # ดึงข้อความที่นักเรียนสั่ง print ออกมาแสดง
+        output = redirected_output.getvalue()
+        if output:
+            st.code(output, language="python")
+        else:
+            st.info("โค้ดทำงานสำเร็จ (แต่ไม่มีการใช้คำสั่ง print เพื่อแสดงผลลัพธ์)")
+            
+    except Exception as e:
+        # คืนค่าตัวระบบแสดงผลกลับมาที่เดิมหากเกิด Error
+        sys.stdout = old_stdout
+        # แสดง Error บรรทัดที่นักเรียนเขียนผิดอย่างละเอียด
+        error_msg = traceback.format_exc()
+        st.error(f"❌ โค้ดของนักเรียนมีจุดผิดพลาด:\n{error_msg}")
