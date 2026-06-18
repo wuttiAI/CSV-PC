@@ -5,7 +5,7 @@ import os
 
 st.set_page_config(page_title="Python CSV Sandbox", layout="wide")
 
-st.title("🖥️ ฝึกเขียน Python กับไฟล์ CSV) : by UPR Wuttichai")
+st.title("🖥️ ฝึกเขียน Python กับไฟล์ CSV : by UPR Wuttichai")
 st.write("คำชี้แจง: ระบบได้เตรียมไฟล์ข้อมูลสำหรับฝึกหัดไว้ให้เรียบร้อยแล้ว นักเรียนสามารถเขียนโค้ดเรียกใช้ไฟล์ตามชื่อด้านล่างได้ทันที")
 
 # --- 🟢 ส่วนที่ 1: รายชื่อไฟล์จริงที่คุณครูกำหนด ---
